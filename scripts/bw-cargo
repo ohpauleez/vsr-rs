@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -eu
+
+host_cargo_home="${CARGO_HOME:-$HOME/.cargo/}"
+host_rustup_home="${RUSTUP_HOME:-$HOME/.rustup}"
+
+bwrap \
+	--unshare-all \
+	--new-session \
+	--ro-bind  /usr   /usr   \
+	--ro-bind  /lib   /lib   \
+	--ro-bind  /lib64 /lib64 \
+	--ro-bind  /etc/alternatives /etc/alternatives \
+	--dev-bind /dev/null /dev/null \
+	--tmpfs    /tmp \
+	--proc     /proc \
+	--ro-bind /run/systemd/resolve/stub-resolv.conf /run/systemd/resolve/stub-resolv.conf \
+    --ro-bind "$host_rustup_home" "/rustup" \
+	--setenv  RUSTUP_HOME "/rustup" \
+	--bind    "$host_cargo_home"  "/cargo" \
+	--setenv  CARGO_HOME  "/cargo" \
+	--setenv  PATH "/usr/bin:/cargo/bin" \
+	--bind    `pwd` /app \
+	--chdir   /app \
+	cargo "$@"
+

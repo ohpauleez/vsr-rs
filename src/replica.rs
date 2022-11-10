@@ -2,7 +2,7 @@ use crate::config::Config;
 use crate::message::Message;
 use crate::types::{CommitID, OpNumber, ReplicaID, ViewNumber};
 use crossbeam_channel::Sender;
-use log::trace;
+use tracing::trace;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::fmt::Debug;

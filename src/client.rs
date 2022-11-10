@@ -2,8 +2,8 @@ use crate::config::Config;
 use crate::message::Message;
 use crate::types::{ClientID, ReplicaID, RequestNumber, ViewNumber};
 use crossbeam_channel::Sender;
-use log::trace;
 use parking_lot::{Condvar, Mutex};
+use tracing::trace;
 use std::fmt::Debug;
 use std::sync::Arc;
 
