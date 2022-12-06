@@ -7,6 +7,7 @@ mod tests {
     #[test]
     fn test_normal_operation() {
         let _ = env_logger::try_init();
+        let _ = tracing_subscriber::fmt::try_init();
         let (client_tx, _client_rx) = crossbeam_channel::unbounded();
         let (replica_tx, replica_rx) = crossbeam_channel::unbounded();
         let config = Arc::new(Mutex::new(Config::new()));

@@ -1,11 +1,10 @@
 use crate::config::Config;
 use crate::message::Message;
 use crate::types::{ClientID, ReplicaID, RequestNumber, ViewNumber};
-use crossbeam_channel::Sender;
-use parking_lot::{Condvar, Mutex};
+use std::sync::mpsc::Sender;
+use std::sync::{Arc, Condvar, Mutex};
 use tracing::trace;
 use std::fmt::Debug;
-use std::sync::Arc;
 
 pub type ClientCallback = Box<dyn Fn(RequestNumber) + Send>;
 

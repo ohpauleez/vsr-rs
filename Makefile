@@ -3,10 +3,19 @@ PATH := $(PWD)/tooling/bin:$(PATH)
 export PATH
 SHELL := env PATH='$(PATH)' $(shell which bash)
 
+.PHONY : audit
+audit:
+	cargo audit
 
+#TODO: Using sanitizers likely requires a bit more setup
+#      https://doc.rust-lang.org/beta/unstable-book/compiler-flags/sanitizer.html
 .PHONY : test
 test:
-	cargo miri test
+	RUSTFLAGS="-Zsanitizer=thread" cargo miri test
+
+.PHONY : clippy
+clippy:
+	cargo clippy --tests -- -D warnings
 
 .PHONY : kani
 kani:
@@ -16,6 +25,18 @@ kani:
 flux:
 	tooling/bin/flux --crate-type=lib $(PWD)/src/lib.rs
 	#tooling/bin/flux -L all=$(PWD)/target/x86_64-unknown-linux-gnu/debug/deps --crate-type=lib $(PWD)/src/lib.rs
+
+# NOTE: Using shuttle as a feature here instead of config, which enables conditional dependency
+.PHONY : shuttle
+shuttle:
+	cargo test --features shuttle
+
+# Specifically using `clippy` over `cargo check` even if it's more opinated
+.PHONY : check
+check: audit clippy
+
+.PHONY : check-all
+check-all: audit clippy test kani flux
 
 tooling/flux: tooling/bin
 	cd tooling \
@@ -44,6 +65,7 @@ tooling/bin:
 	&& rustup component add miri \
 	&& cargo install --locked kani-verifier \
 	&& cargo-kani setup \
+	&& cargo install cargo-audit \
 	&& mkdir -p ./tooling \
 	&& cd tooling \
 	&& mkdir -p ./bin \
