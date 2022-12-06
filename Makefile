@@ -38,6 +38,9 @@ check: audit clippy
 .PHONY : check-all
 check-all: audit clippy test kani flux
 
+bom.xml:
+	cargo cyclonedx
+
 tooling/flux: tooling/bin
 	cd tooling \
 	&& wget https://get.haskellstack.org/ -O install-stack.sh \
@@ -66,6 +69,7 @@ tooling/bin:
 	&& cargo install --locked kani-verifier \
 	&& cargo-kani setup \
 	&& cargo install cargo-audit \
+	&& cargo install cargo-cyclonedx \
 	&& mkdir -p ./tooling \
 	&& cd tooling \
 	&& mkdir -p ./bin \
