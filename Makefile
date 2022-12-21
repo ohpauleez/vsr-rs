@@ -23,7 +23,8 @@ kani:
 
 .PHONY : flux
 flux:
-	tooling/bin/flux --crate-type=lib $(PWD)/src/lib.rs
+	tooling/bin/cargo-flux check
+	#tooling/bin/flux --crate-type=lib $(PWD)/src/lib.rs
 	#tooling/bin/flux -L all=$(PWD)/target/x86_64-unknown-linux-gnu/debug/deps --crate-type=lib $(PWD)/src/lib.rs
 
 # NOTE: Using shuttle as a feature here instead of config, which enables conditional dependency
@@ -37,6 +38,10 @@ check: audit clippy
 
 .PHONY : check-all
 check-all: audit clippy test kani flux
+
+.PHONY : build
+build:
+	cargo build --profile release-lto
 
 bom.xml:
 	cargo cyclonedx
@@ -61,7 +66,8 @@ tooling/flux: tooling/bin
 	&& ln -s ../liquid-fixpoint/fixpoint ./fixpoint \
 	&& ln -s ../liquid-fixpoint/fixpoint ./liquid-fixpoint \
 	&& ln -s ../z3-4.11.2-x64-glibc-2.31/bin/z3 \
-	&& cp ../../scripts/flux .
+	&& cp ../../scripts/flux . \
+	&& cp ../../scripts/cargo-flux .
 
 tooling/bin:
 	rustup component add rust-src \

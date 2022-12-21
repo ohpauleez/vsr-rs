@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -eu
+
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+FLUX=$DIR/../flux/target/debug/flux
+
+TARG_TRIPLE=$(rustup show | grep default | grep -Po "^[^-]+-\K\S+")
+
+# This perl-style extended regex only works on GNU grep
+#TOOLCHAIN=$(grep -oP 'channel = \"\K.+\w+' rust-toolchain)
+
+CHAIN=nightly-2022-11-07
+
+RUSTUP_TOOLCHAIN=$CHAIN DYLD_FALLBACK_LIBRARY_PATH=~/.rustup/toolchains/$CHAIN-$TARG_TRIPLE/lib RUSTC_WRAPPER=$FLUX cargo $@
+
