@@ -126,7 +126,7 @@ where
         //trace!("Replica {} <- {:?}", self.self_id, message);
         match message {
             Message::Request { op, .. } => {
-                if let Ok(inner) = self.inner.lock() {
+                if let Ok(mut inner) = self.inner.lock() {
                     // TODO: If not primary, drop request, advise client to connect to primary.
                     assert!(self.is_primary(&inner));
                     // TODO: If not in normal status, drop request, advise client to try later.

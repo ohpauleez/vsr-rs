@@ -1,4 +1,5 @@
-#![deny(clippy::pedantic, clippy::clone_on_ref_ptr, missing_docs)]
+//#![deny(clippy::pedantic, clippy::clone_on_ref_ptr, missing_docs)]
+#![deny(clippy::pedantic, clippy::clone_on_ref_ptr)]
 
 pub mod client;
 pub mod config;

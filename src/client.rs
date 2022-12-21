@@ -1,10 +1,26 @@
 use crate::config::Config;
 use crate::message::Message;
 use crate::types::{ClientID, ReplicaID, RequestNumber, ViewNumber};
-use std::sync::mpsc::Sender;
-use std::sync::{Arc, Condvar, Mutex};
-use tracing::trace;
 use std::fmt::Debug;
+use tracing::trace;
+
+#[cfg(not(feature = "shuttle"))]
+use std::sync::{
+    mpsc::Sender,
+    Arc,
+    Condvar,
+    Mutex,
+    //RwLock,
+};
+
+#[cfg(feature = "shuttle")]
+use shuttle::sync::{
+    mpsc::Sender,
+    Arc,
+    Condvar,
+    Mutex,
+    //RwLock,
+};
 
 pub type ClientCallback = Box<dyn Fn(RequestNumber) + Send>;
 
@@ -54,25 +70,26 @@ where
         let pair_ = Arc::clone(&pair);
         let callback = move |request_number| {
             let (lock, cvar) = &*pair_;
-            let mut completed = lock.lock();
-            *completed = Some(request_number);
-            cvar.notify_one();
+            if let Ok(mut completed) = lock.lock() {
+                *completed = Some(request_number);
+                cvar.notify_one()
+            }
         };
         self.request_async(op, Box::new(callback));
         let (lock, cvar) = &*pair;
-        let mut completed = lock.lock();
-        loop {
-            if let Some(request_number) = *completed {
-                return request_number;
-            }
-            cvar.wait(&mut completed);
+        let completed = lock.lock().unwrap();
+        let new_guard = cvar.wait(completed).unwrap();
+        if let Some(request_number) = *new_guard {
+            return request_number;
+        } else {
+            usize::MIN
         }
     }
 
     pub fn request_async(&self, op: Op, callback: ClientCallback) {
         trace!("Client {} <- {:?}", self.client_id, op);
-        let primary_id = self.config.lock().primary_id(self.view_number);
-        let mut inner = self.inner.lock();
+        let primary_id = self.config.lock().unwrap().primary_id(self.view_number);
+        let mut inner = self.inner.lock().unwrap();
         let request_number = inner.request_number;
         inner.request_number += 1;
         inner.callbacks.replace((request_number, callback));
@@ -89,9 +106,10 @@ where
     }
 
     pub fn on_message(&self) {
-        let mut inner = self.inner.lock();
-        if let Some((request_number, callback)) = inner.callbacks.take() {
-            callback(request_number);
+        if let Ok(mut inner) = self.inner.lock() {
+            if let Some((request_number, callback)) = inner.callbacks.take() {
+                callback(request_number);
+            }
         }
     }
 }
